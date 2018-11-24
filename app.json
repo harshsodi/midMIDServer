@@ -1,0 +1,12 @@
+{
+    "name": "Say no to VPN",
+    "description": "A hack to monitor logs on MID server under a closed network",
+    "repository": "https://github.com/heroku/say-no-to-vpn",
+    "logo": "https://cdn.rawgit.com/heroku/node-js-getting-started/master/public/node.svg",
+    "keywords": [
+        "node",
+        "express",
+        "heroku"
+    ],
+    "image": "heroku/nodejs"
+}
