@@ -37,7 +37,7 @@ function initiateConnection() {
         // Seperate rooms per MID Server are created for local agents needing a particular
 
         console.log('A client Connected on /');
-
+        console.log("TypeOf : " + typeof socket);
         // When a MID server requests registration
         socket.on('registerMIDServer', dataRaw => { // From MID Server
 
@@ -45,8 +45,9 @@ function initiateConnection() {
 
             try {
 
+                var data;
                 try {
-                    var data = JSON.parse(dataRaw);
+                    data = JSON.parse(dataRaw);
                 } catch(exception) {
                     console.log("Invalid JSON for MID Server data.");
                 }
@@ -55,9 +56,17 @@ function initiateConnection() {
 
                 if (MIDServer) {
 
-                    MIDServer.createRoom(io);
-                    MIDServer.startListeningTail();
-                    console.log("Room created.");
+                    if(!MIDServer.createRoom(io)) {
+                        console.log("Aborting as room could not be created.");
+                        return;
+                    }
+                    console.log(data.id + ": Room created.");
+
+                    if(!MIDServer.startListeningTail()) {
+                        console.log("Failed to start Tailing listener.");
+                        return;
+                    }
+                    console.log(data.id + ": Started Tailing listener.");
 
                     // On the name of her megesty , make way for Local Agent
                     MIDServer.room.on('connection', localAgentConnected);
@@ -79,7 +88,9 @@ function initiateConnection() {
 
         // When a socket connection closes
         socket.on('disconnect', () => { // From anyone
-            console.log('Client disconnected from /');
+            
+            // var midServer = MIDServerManager.getMidServer(socket);
+            MIDServerManager.unRegisterMIDServer(socket, io);
         });
     });
 }

@@ -1,4 +1,6 @@
-const Tail = require('tail').Tail;
+// const Tail = require('tail').Tail;
+var Tail = require('always-tail');
+// const Tail = require('nodejs-tail');
 
 class LogTail {
 
@@ -14,13 +16,13 @@ class LogTail {
         // Start emitting the tail
         console.log("Started to emit logs.");
 
-        // On tail, issue 'tailGenerated' event
-
         const filename = './Services/test.txt';
-        const tail = new Tail(filename);
+        // const tail = new Tail(filename);
+
+        var tail = new Tail(filename);
 
         tail.on('line', function (line) {
-            console.log("Tailed it");
+            console.log(line);
             socket.emit('tailGenerated', line);
         });
 
