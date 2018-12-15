@@ -1,28 +1,25 @@
-// const Tail = require('tail').Tail;
+/***********************
+ * Author: Harsh Sodiwala
+ ************************/
+
 var Tail = require('always-tail');
-// const Tail = require('nodejs-tail');
 
 class LogTail {
 
-    constructor() {
-
-    }
+    constructor() {}
 
     /**
-     * 
+     * Initiate log tailing
+     * Read on the log file and send event with updated line to cloud server
      */
     start(socket) {
 
-        // Start emitting the tail
         console.log("Started to emit logs.");
-
-        const filename = './Services/test.txt';
-        // const tail = new Tail(filename);
-
+        
+        const filename = '../logs/agent0.log.0'; // <Debugging> __dirname + '/test.txt'
         var tail = new Tail(filename);
 
-        tail.on('line', function (line) {
-            console.log(line);
+        tail.on('line', function (line) { // When new log is added
             socket.emit('tailGenerated', line);
         });
 
