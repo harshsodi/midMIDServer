@@ -2,6 +2,8 @@
  * This script will run on remote Dyno as entry point
  * Accept socket connections
  * Respond to events from both ends
+ * 
+ * Author: Harsh Sodiwala
  ****************************************************/
 
 var app = require('express')();
@@ -37,7 +39,7 @@ function initiateConnection() {
         // Seperate rooms per MID Server are created for local agents needing a particular
 
         console.log('A client Connected on /');
-        console.log("TypeOf : " + typeof socket);
+        
         // When a MID server requests registration
         socket.on('registerMIDServer', dataRaw => { // From MID Server
 
@@ -52,11 +54,11 @@ function initiateConnection() {
                     console.log("Invalid JSON for MID Server data.");
                 }
 
-                var MIDServer = MIDServerManager.registerMIDServer(socket, data);
+                var MIDServer = MIDServerManager.registerMIDServer(socket, data, io);
 
                 if (MIDServer) {
 
-                    if(!MIDServer.createRoom(io)) {
+                    if(!MIDServer.createRoom()) {
                         console.log("Aborting as room could not be created.");
                         return;
                     }
@@ -82,14 +84,35 @@ function initiateConnection() {
             }
         });
 
-        socket.on('registerLocalAgent', dataRaw => { // From Local Agent
-            // TODO: Verify if required
+        socket.on('getMidServers', () => {
+
+            try {
+                
+                const midServers = MIDServerManager.getMidServers();
+                const midServerIDs = Object.keys(midServers);
+                const midServerList = midServerIDs.map( midServerID => {
+                    console.log("MID ID: " + midServerID);
+                    const midServer = midServers[midServerID]
+                    return {
+                        'id': midServer.data.id,
+                        'name': midServer.data.name
+                    }
+                });
+                
+                console.log(midServerList);
+                socket.emit('midServerListSent', JSON.stringify(midServerList));
+            
+            } catch(exception) {
+                console.log("Failed to send the list of MID Servers. Exception: " + exception.toString());
+            }
+            
         });
 
         // When a socket connection closes
         socket.on('disconnect', () => { // From anyone
             
             // var midServer = MIDServerManager.getMidServer(socket);
+            console.log("MID Server disconnected.");
             MIDServerManager.unRegisterMIDServer(socket, io);
         });
     });

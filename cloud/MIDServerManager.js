@@ -1,31 +1,32 @@
-/**
+/*****************************************
  * A seperate handler for MID Server
  * Because MID Server matters for everyone
- */
+ * 
+ * Author: Harsh Sodiwala
+ ******************************************/
 
 class MIDServer {
 
-    constructor(data, socket) {
+    constructor(data, socket, io) {
 
         this.data = data;
         this.socket = socket;
+        this.io = io;
     }
 
     /**
-     * Create event listeners on dedicated channel (room)
-     * @param {Socket} io 
+     * Create event listeners on dedicated channel (room) 
      */
-    createRoom(io) {
+    createRoom() {
 
         try {
 
             var midServerID = this.data.id;
-            this.room = io.of(midServerID);
-
+            this.room = this.io.of(midServerID);
+            
             return true;
 
         } catch (exception) {
-            // TODO: Handle exception
             console.log("Exception creating room: " + exception.toString());
             return false;
         }
@@ -45,20 +46,17 @@ class MIDServer {
 
                 // On tail event, emit the received tail in the room
                 this.socket.on('tailGenerated', data => {
-
-                    console.log("Tail received : " + data);
+                    console.log("Tail received:" + data);
                     context.room.emit('tailGenerated', data)
                 });
 
                 return true;
             } else {
-                // TODO: Room is not yet created.
                 console.log("Listening request issued before creating room.");
                 return false;
             }
 
         } catch (exception) {
-            // TODO: Could not start tailing.
             console.log("Exception starting tailing : " + exception.toString());
         }
     }
@@ -78,7 +76,7 @@ class MIDServerManager {
      */
     getMidServers() {
 
-        return this.midServers();
+        return this.midServers;
     }
 
     _getMidServerBySocket(socket) {
@@ -106,11 +104,8 @@ class MIDServerManager {
         var midServer;
 
         if (typeof identifier == "string") {
-
             midServer = this.midServers[identifier];
-        
         } else if (typeof identifier == "object") {
-        
             midServer = this._getMidServerBySocket(identifier);
         }
 
@@ -126,7 +121,7 @@ class MIDServerManager {
      * @param {Socket} socket 
      * @param {String} dataRaw JSON string of MID Server data 
      */
-    registerMIDServer(socket, data) {
+    registerMIDServer(socket, data, io) {
 
         // Create new MID Server object and add to list
         try {
@@ -134,18 +129,23 @@ class MIDServerManager {
             if (data && data.id) {
 
                 var midServerID = data.id
+                
                 if (this.midServers[midServerID]) {
-                    // TODO: Already exist. Do something
+
                     console.log("MID Server already registered");
                     return null;
+                
                 } else {
-                    this.midServers[midServerID] = new MIDServer(data, socket);
+                
+                    var newMidServer = new MIDServer(data, socket, io);
+                    this.midServers[midServerID] = newMidServer;
                     return this.midServers[midServerID];
+                
                 }
 
             } else {
-                console.log('Problem with data.')
-                // TODO: Do something
+                console.log('Problem with data.');
+                return null;
             }
 
         } catch (exception) {
